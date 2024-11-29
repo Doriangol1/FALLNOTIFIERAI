@@ -66,10 +66,10 @@ from imutils.io import TempFile
 
 class Conf:
 	def __init__(self, confPath):
-		# load and store the configuration and update the object's
-		# dictionary
+		# load and store the configuration and update the object's dictionary
 		conf = json.loads(json_minify(open(confPath).read()))
 		self.__dict__.update(conf)
+        
 	def __getitem__(self, k):
 		# return the value associated with the supplied key
 		return self.__dict__.get(k, None)
@@ -85,27 +85,26 @@ class TwilioNotifier:
         self.conf = conf
     
     def send(self, msg, tempVideo):
+
         # start a thread to upload the file and send it
         #t = Thread(target=self._send, args=(msg, tempVideo,))
         #t.start()
-    
-    #def _send(self, msg, tempVideo):
+
         # create a s3 client object
         s3 = boto3.client("s3", aws_access_key_id=self.conf["aws_access_key_id"], aws_secret_access_key=self.conf["aws_secret_access_key"])
+        
         # get the filename and upload the video in public read mode
-        #filename = tempVideo.path[tempVideo.path.rfind("/") + 1:]
         filename = "outToUpload.mp4"
         s3.upload_file("/Users/dorian/documents/imagerecognition/FallAssistant/outToUpload.mp4", self.conf["s3_bucket"], filename, ExtraArgs={"ACL": "public-read", "ContentType": "video/mp4"})
         location = s3.get_bucket_location(Bucket=self.conf["s3_bucket"])["LocationConstraint"]
-        #url = "https://s3-{}.amazonaws.com/{}/{}".format(location, self.conf["s3_bucket"], filename)
+       
         url = "https://falldetectionstorage.s3.amazonaws.com/outToUpload.mp4"
         
         # initialize the twilio client and send the message
         client = Client(self.conf["twilio_sid"], self.conf["twilio_auth"])
         client.messages.create(to=self.conf["twilio_to"], from_=self.conf["twilio_from"], body=msg, media_url = [url])
                 
-        # delete the temporary file
-        #tempVideo.cleanup()
+
     
 
 conf = Conf("/Users/dorian/documents/imagerecognition/FallAssistant/configuration/conf.json")
